@@ -47,22 +47,37 @@ class DataBase
     }
 
     /**
+     * @param $tableName
+     * @return table
+     */
+    protected function getTable($tableName): table
+    {
+        if(array_key_exists($tableName,$this->tables)){
+            return $this->tables[$tableName];
+        }
+    }
+
+    /**
      * @param string $name
-     * @param array|null $arguments
-     * @return table|void
+     * @param array|string|null $arguments
+     * @return table
      */
     public function __call(string $name, array $arguments = null)
     {
 
         if(array_key_exists($name,$this->tables) && $arguments == null){
-            return $this->tables[$name];
+            return $this->getTable($name);
         }elseif(array_key_exists($name,$this->tables) && $arguments != null){
-            print_r();
+            if(count($arguments) == 1){
+                return $this->getTable($name)->query($arguments[0]);
+            }
+//            return $this->getTable($name)->select($arguments[0]);
         }
     }
 
-    public function getTables(){
-        return $this->tables();
+    public function getTables(): array
+    {
+        return $this->tables;
     }
 
 }
@@ -73,7 +88,7 @@ $laravel->newTable("users2");
 $laravel->newTable("users");
 $laravel->newTable("someBase");
 
-$laravel->someBase("safa");
+print_r($laravel->someBase(["SELECT * FROM users"=>PDO::FETCH_ASSOC,'fetchAll']));
 //$laravel->someBase()->columns("id smallint unsigned auto_increment PRIMARY KEY");
 //$laravel->someBase()->columns("path varchar(60) not null");
 //$laravel->someBase()->columns("owner_id smallint unsigned not null");
@@ -88,4 +103,5 @@ $laravel->someBase("safa");
 //$laravel->someBase()->keys("team_id");
 //$laravel->someBase()->create();
 
-//print_r($laravel->users()->select("COUNT(*) as count",10)['count']);
+
+print_r($laravel->users()->select("COUNT(*) as count",10)['count']);
