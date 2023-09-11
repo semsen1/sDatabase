@@ -46,10 +46,18 @@ class DataBase
         }
     }
 
-    public function __call(string $name, array $arguments)
+    /**
+     * @param string $name
+     * @param array|null $arguments
+     * @return table|void
+     */
+    public function __call(string $name, array $arguments = null)
     {
-        if(array_key_exists($name,$this->tables)){
+
+        if(array_key_exists($name,$this->tables) && $arguments == null){
             return $this->tables[$name];
+        }elseif(array_key_exists($name,$this->tables) && $arguments != null){
+            print_r();
         }
     }
 
@@ -63,4 +71,21 @@ $laravel = new DataBase();
 $laravel->connect("laravel",'root','');
 $laravel->newTable("users2");
 $laravel->newTable("users");
-print_r($laravel->users()->select("COUNT(*) as count",10)['count']);
+$laravel->newTable("someBase");
+
+$laravel->someBase("safa");
+//$laravel->someBase()->columns("id smallint unsigned auto_increment PRIMARY KEY");
+//$laravel->someBase()->columns("path varchar(60) not null");
+//$laravel->someBase()->columns("owner_id smallint unsigned not null");
+//$laravel->someBase()->columns("team_id smallint unsigned");
+//$laravel->someBase()->columns("author smallint unsigned");
+//$laravel->someBase()->columns("name varchar(255) not null");
+//$laravel->someBase()->columns("last_update datetime not null");
+//$laravel->someBase()->columns("tags text");
+//$laravel->someBase()->columns("status int(1) not null");
+//$laravel->someBase()->keys("id_p");
+//$laravel->someBase()->keys("owner_id");
+//$laravel->someBase()->keys("team_id");
+//$laravel->someBase()->create();
+
+//print_r($laravel->users()->select("COUNT(*) as count",10)['count']);
