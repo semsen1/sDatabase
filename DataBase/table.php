@@ -1,6 +1,7 @@
 <?php
 
 namespace DataBase;
+use Exception\tableException;
 use PDO;
 
 class table extends DataBaseCreate
@@ -113,8 +114,15 @@ class table extends DataBaseCreate
 
     public function query(array|string  $query){
         if(is_array($query)){
-            print_r($query);
-//            return($this->db->query());
+            if(count($query) != 3){
+                throw new tableException("Three arguments are required[query,mode,fetch method]");
+            }else{
+                if(is_string($query[0]) && is_integer($query[1]) && is_string($query[2])){
+                    $fetch = $query[2];
+                    return($this->db->query($query[0])->$fetch($query[1]));
+                }
+
+            }
         }elseif(is_string($query)){
             return($this->db->query($query,PDO::FETCH_ASSOC)->fetchAll());
         }
