@@ -2,6 +2,7 @@
 
 namespace Exception;
 use Exception;
+use ErrorInterface;
 class tableException extends Exception
 {
 

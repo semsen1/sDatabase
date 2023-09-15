@@ -1,10 +1,8 @@
 <?php
 namespace DataBase;
-//error_reporting(E_ALL);
-
-spl_autoload_register(function ($class){
-    require_once($class.".php");
-});
+error_reporting(E_ALL);
+require_once("autoload.php");
+Autoloader::register();
 
 use DataBase\db;
 use DataBase\table;
@@ -75,8 +73,10 @@ class DataBase
         }elseif(array_key_exists($name,$this->tables) && $arguments != null){
             if(count($arguments) == 1){
                 return $this->getTable($name)->query($arguments[0]);
+            }else{
+                return $this->getTable($name)->select(...$arguments);
             }
-//            return $this->getTable($name)->select($arguments[0]);
+
         }
     }
 
@@ -93,7 +93,7 @@ $laravel->newTable("users2");
 $laravel->newTable("users");
 $laravel->newTable("someBase");
 
-//print_r($laravel->someBase(["SELECT * FROM users",PDO::FETCH_ASSOC,"fetchAll"]));
+print_r($laravel->users("*",10,"id % 2 = 0"));
 
 $laravel->someBase()->columns("id_p smallint unsigned auto_increment PRIMARY KEY");
 $laravel->someBase()->columns("path varchar(60) not null");
@@ -107,8 +107,12 @@ $laravel->someBase()->columns("status int(1) not null");
 $laravel->someBase()->keys("id_p");
 $laravel->someBase()->keys("owner_id");
 $laravel->someBase()->keys("team_id");
-$laravel->someBase()->fkeys("team_id","asfg","tmi");
+$laravel->someBase()->fkeys("team_id","asfg","tmi",["c"=>"casc","d"=>"CASCADE","u"=>"CASCADE"]);
 $laravel->someBase()->create();
 print "\r\n";
 
 print_r($laravel->users()->select("COUNT(*) as count",10)['count']);
+
+
+?>
+

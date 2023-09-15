@@ -2,7 +2,7 @@
 namespace DataBase;
 use Exception\tableException;
 Use PDO;
-class DataBaseCreate
+class TableCreate
 {
 
     protected PDO $db;
@@ -71,6 +71,7 @@ class DataBaseCreate
      */
     public function fKeys(string|array $columns, string $fTableName, string|array $fColumns, array|null $options = null){
         if($this->errors == 0) {
+
             if ($this->TableExists == 0) {
                 if( ( gettype($columns) != gettype($fColumns) ) ||
                     ( is_array($columns) && is_array($fColumns) && count($columns) != count($fColumns) ) ){
@@ -88,7 +89,7 @@ class DataBaseCreate
                 $constraint = '';
                 $onDelete = '';
                 $onUpdata = '';
-                $changeValues = ['CASCADE',"NULL","SET NULL","RESTRICT","ACTION","No ACTION","DEFAULT","SET DEFAULT"];
+                $changeValues = ['CASCADE',"NULL","SET NULL","RESTRICT","ACTION","NO ACTION","DEFAULT","SET DEFAULT"];
 
 
                 if($options != null){
@@ -137,7 +138,6 @@ class DataBaseCreate
             if($this->TableExists  == 0){
                 $query = $this->columns.$this->key.$this->fkey;
                 $query = preg_replace("/,$/",'',$query);
-                print $this->fkey;
                 $this->db->exec("CREATE TABLE IF NOT EXISTS {$this->name}({$query})");
             }
         }

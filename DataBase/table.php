@@ -4,38 +4,36 @@ namespace DataBase;
 use Exception\tableException;
 use PDO;
 
-class table extends DataBaseCreate
+class table extends TableCreate
 {
     //select from table
     /**
-     * @param $columns
-     * @param $fetch
-     * @param $query
-     * @param $order
-     * @param $group
-     * @param $having
+     * @param string $columns
+     * @param int $fetch
+     * @param string|false $where
+     * @param string|false $order
+     * @param string|false $group
+     * @param string|false $having
      * @return mixed|void
      */
-    public function select($columns, $fetch = 0, $query= false, $order=false, $group=false, $having=false){
+    public function select(string $columns, int $fetch = 0, string|false $where= false, string|false $order=false, string|false $group=false, string|false $having=false){
         if($this->errors == 0){
             //if isset query
-            if(!empty($query) && $query != false){
-                $query = "WHERE $query";
+            if(!empty($where)){
+                $where = "WHERE $where";
             }
-            if(!empty($order) && $order != false){
+            if(!empty($order)){
                 $order = "ORDER BY $order";
             }
-            if(!empty($group) && $group != false){
+            if(!empty($group)){
                 $group = "GROUP BY $group";
             }
-            if(!empty($having) && $having != false){
+            if(!empty($having)){
                 $having .= " HAVING $having";
             }
-            $terms = $query." ".$order." ".$group." ".$having;
-            //if fetch == 1 fetch assoc
+            $terms = $where." ".$order." ".$group." ".$having;
             if($fetch != 0){
                 $data = $this->db->query("SELECT {$columns} FROM {$this->name} {$terms}",PDO::FETCH_ASSOC)->fetchall();
-                //if fetch == 0 fetch all
             }elseif($fetch == 0){
                 $data = $this->db->query("SELECT {$columns} FROM {$this->name} {$terms}")->fetchall();
             }
@@ -112,7 +110,12 @@ class table extends DataBaseCreate
         }
     }
 
-    public function query(array|string  $query){
+    /**
+     * @param array|string $query
+     * @return array|false|void
+     * @throws tableException
+     */
+    public function query(array|string $query){
         if(is_array($query)){
             if(count($query) != 3){
                 throw new tableException("Three arguments are required[query,mode,fetch method]");
@@ -121,12 +124,9 @@ class table extends DataBaseCreate
                     $fetch = $query[2];
                     return($this->db->query($query[0])->$fetch($query[1]));
                 }
-
             }
         }elseif(is_string($query)){
             return($this->db->query($query,PDO::FETCH_ASSOC)->fetchAll());
         }
-
     }
-
 }
