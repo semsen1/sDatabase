@@ -1,7 +1,7 @@
 <?php
-namespace DataBase;
-use Exception\tableException;
-Use PDO;
+namespace database;
+use database\Exception\tableException;
+use PDO;
 class TableCreate
 {
 

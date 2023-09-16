@@ -1,9 +1,8 @@
 <?php
 
-namespace DataBase;
-use Exception\tableException;
+namespace database;
+use database\Exception\tableException;
 use PDO;
-
 class table extends TableCreate
 {
     //select from table
