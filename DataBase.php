@@ -1,13 +1,11 @@
 <?php
-namespace DataBase;
-error_reporting(E_ALL);
-require_once("autoload.php");
-Autoloader::register();
+namespace database;
+require_once("vendor/autoload.php");
 
-use DataBase\db;
-use DataBase\table;
-use Exception\tableException;
-Use PDO;
+use database\db;
+use database\table;
+use database\Exception\tableException;
+
 
 
 class DataBase

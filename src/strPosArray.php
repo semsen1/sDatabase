@@ -1,5 +1,5 @@
 <?php
-namespace DataBase;
+namespace database;
 
 class strPosArray
 {

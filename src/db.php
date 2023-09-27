@@ -1,6 +1,5 @@
 <?php
-
-namespace DataBase;
+namespace database;
 use PDO;
 use PDOException;
 
@@ -114,7 +113,6 @@ class db{
     {
         return $this->db;
     }
-
 
 
 }

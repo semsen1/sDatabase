@@ -1,9 +1,8 @@
 <?php
 
-namespace DataBase;
-use Exception\tableException;
+namespace database;
+use database\Exception\tableException;
 use PDO;
-
 class table extends TableCreate
 {
     //select from table
@@ -16,7 +15,8 @@ class table extends TableCreate
      * @param string|false $having
      * @return mixed|void
      */
-    public function select(string $columns, int $fetch = 0, string|false $where= false, string|false $order=false, string|false $group=false, string|false $having=false){
+    public function select(string $columns, int $fetch = 0, string|false $where= false, string|false $order=false, string|false $group=false, string|false $having=false)
+    {
         if($this->errors == 0){
             //if isset query
             if(!empty($where)){
