@@ -115,7 +115,6 @@ class db{
     }
 
 
-
 }
 
 $asf = new db("laravel",'root','');
