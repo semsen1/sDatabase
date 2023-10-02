@@ -2,12 +2,14 @@
 namespace database;
 use PDO;
 use PDOException;
+use database\Exception\dbException;
 
 class db{
     private PDO $db;
     protected string $host = "127.0.0.1";
     protected string $dbms = "mysql";
     protected string $port = '3306';
+    protected string $dbName;
     protected int $errorReporting = 0;
 
     protected array $errors = [];
@@ -20,10 +22,13 @@ class db{
      * @param array|null $params params[host = 127.0.0.1|dbms = mysql|port = 3306]
      */
 
-    public function __construct(string $dbName, string $login, string $password,Array|null $params = null){
+    public function __construct(string $dbName, string $login, string $password = '',Array|null $params = null){
         $host = $this->host;
         $dbms = $this->dbms;
         $port = $this->port;
+
+        $this->dbName = $dbName;
+
         if($params != null){
             if(array_key_exists("host",$params)){
                 $host = $params['host'];
@@ -40,28 +45,48 @@ class db{
 
         if(!empty($dbName) && !empty($login) && !empty($this->host)){
             //if exists
+
             try{
                 $this->db = new PDO("{$dbms}:host={$this->host};port={$port};dbname={$dbName}",$login,$password);
-                $this->db->query("SET NAMES 'utf8'");
-                $this->db->query("SET CHARACTER SET 'utf8'");
-                $this->db->query("SET SESSION collation_connection = 'utf8_general_ci'");
+                if($dbms == "mysql"){
+                    $this->db->query("SET NAMES 'utf8'");
+                    $this->db->query("SET CHARACTER SET 'utf8'");
+                    $this->db->query("SET SESSION collation_connection = 'utf8_general_ci'");
+                }
+
             }catch(PDOexception $e){
                 //if not, create
-                if($dbms == "mysql"){
+                if($e->getCode() != 1049 && $e->getCode() != 7){
+                    switch ($e->getCode()){
+                        case 1045:
+                            throw new dbException("authentication failed");
+                            break;
+                        case 1044:
+                            throw new dbException("Access denied user:{$login}");
+                            break;
+                        default:
+                            throw new dbException("Connection error");
+                            break;
+                    }
+                }
+
+//                if($dbms == "mysql"){
                     try {
                         $db = new PDO("{$dbms}:host={$host};port={$port}",$login,$password);
                         $db->exec("CREATE DATABASE {$dbName}");
-                        $this->db = new PDO("mysql:host={$host};dbname={$dbName}",$login,$password);
-                        $this->db->query("SET NAMES 'utf8'");
-                        $this->db->query("SET CHARACTER SET 'utf8'");
-                        $this->db->query("SET SESSION collation_connection = 'utf8_general_ci'");
+                        $this->db = new PDO("{$dbms}:host={$host};port={$port};dbname={$dbName}",$login,$password);
+                        if($dbms == "mysql"){
+                            $this->db->query("SET NAMES 'utf8'");
+                            $this->db->query("SET CHARACTER SET 'utf8'");
+                            $this->db->query("SET SESSION collation_connection = 'utf8_general_ci'");
+                        }
                     }catch (PDOException $error){
                         $this->errors[] = ["db"=>"create"];
                     }
 
-                }else{
-                    $this->errors[] = ["db"=>"connection"];
-                }
+//                }else{
+//                    $this->errors[] = ["db"=>"connection"];
+//                }
 
 
             }
@@ -113,11 +138,11 @@ class db{
     {
         return $this->db;
     }
+    public function getDbname(){
+        return $this->dbName;
+    }
 
 
 }
 
-$asf = new db("laravel",'root','');
-$asf->error_reporting(1);
-print_r($asf->getErrors());
 

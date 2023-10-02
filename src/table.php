@@ -2,6 +2,7 @@
 
 namespace database;
 use database\Exception\tableException;
+use database\TableCreate;
 use PDO;
 class table extends TableCreate
 {

@@ -11,6 +11,7 @@ use database\Exception\tableException;
 class DataBase
 {
     private db $db;
+    private $dbName;
     private array $tables;
     /**
      * @param string $dbName
@@ -19,17 +20,19 @@ class DataBase
      * @param array|null $params params[host = 127.0.0.1|dbms = mysql|port = 3306]
      * @return void
      */
-    public function connect(string $dbName, string $login, string $password,Array|null $params = null): void
+    public function connect(string $dbName, string $login, string $password = '',Array|null $params = null): void
     {
+        $this->dbName = $dbName;
         $this->db = new db($dbName,$login,$password,$params);
     }
 
     /**
      * @param $tableName
-     * @return void
+     * @return table
      */
     public function newTable($tableName){
-        $this->tables[$tableName] = new table($this->db->getDb(),$tableName);
+        $this->tables[$tableName] = new table($this->db->getDb(),$tableName,$this->dbName);
+        return $this->tables[$tableName];
     }
 
     /**
@@ -86,30 +89,23 @@ class DataBase
 }
 
 $laravel = new DataBase();
-$laravel->connect("laravel",'root','');
-$laravel->newTable("users2");
-$laravel->newTable("users");
-$laravel->newTable("someBase");
 
-print_r($laravel->users("*",10,"id % 2 = 0"));
 
-$laravel->someBase()->columns("id_p smallint unsigned auto_increment PRIMARY KEY");
-$laravel->someBase()->columns("path varchar(60) not null");
-$laravel->someBase()->columns("owner_id smallint unsigned not null");
-$laravel->someBase()->columns("team_id smallint unsigned not null");
-$laravel->someBase()->columns("author smallint unsigned");
-$laravel->someBase()->columns("name varchar(255) not null");
-$laravel->someBase()->columns("last_update datetime not null");
-$laravel->someBase()->columns("tags text");
-$laravel->someBase()->columns("status int(1) not null");
-$laravel->someBase()->keys("id_p");
-$laravel->someBase()->keys("owner_id");
-$laravel->someBase()->keys("team_id");
-$laravel->someBase()->fkeys("team_id","asfg","tmi",["c"=>"casc","d"=>"CASCADE","u"=>"CASCADE"]);
-$laravel->someBase()->create();
-print "\r\n";
+//new \PDO("pgsql:host=127.0.0.1;port=5432;dbname=postgres","postgres","newPassword");
+$laravel->connect("postgres12",'postgres','newPassword',['dbms'=>"pgsql","port"=>"5432"]);
+$laravel->newTable("base");
+$laravel->base()->column("base int");
+$laravel->base()->create();
+//$laravel->newTable("users2");
+//$laravel->newTable("users");
+//$laravel->newTable("someBase");
+//
+//print_r($laravel->users("*",10,"id % 2 = 0"));
+//
 
-print_r($laravel->users()->select("COUNT(*) as count",10)['count']);
+//print "\r\n";
+//
+//print_r($laravel->users()->select("COUNT(*) as count",10)['count']);
 
 
 ?>

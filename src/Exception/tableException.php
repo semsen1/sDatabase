@@ -1,27 +1,19 @@
 <?php
 
-namespace Exception;
+namespace database\Exception;
 use Exception;
-use ErrorInterface;
+use database\Exception\getErrorLine;
 class tableException extends Exception
 {
-    /**
-     * @return int
-     */
-    public function getErrorLine(): int
-    {
-        $except = debug_backtrace();
-        $except = end($except)['line'];
-        return $except;
-    }
-
+    use getErrorLine;
     /**
      * @param $message
      * @param $line
      */
-    function __construct($message)
+    function __construct($message,$code = 0)
     {
         $this->message = $message;
+        $this->code = $code;
         $this->line = $this->getErrorLine();
 
     }
