@@ -17,14 +17,15 @@ class TableCreate
     /**
      * @param PDO $db
      * @param string $name
+     * @param string $dbName
      */
     public function __construct(PDO $db, string $name,string $dbName = ''){
         if($this->errors == 0){
             $this->db = $db;
             $this->name = $name;
-            $query = "SELECT COUNT(*) as exists FROM information_schema.tables WHERE table_name ='{$name}' AND (table_catalog = '{$dbName}' OR TABLE_SCHEMA = '{$dbName}')";
+            $query = "SELECT COUNT(*) as exist FROM information_schema.tables WHERE table_name ='{$name}' AND (table_catalog = '{$dbName}' OR TABLE_SCHEMA = '{$dbName}')";
             $searchTable = $this->db->query($query, PDO::FETCH_ASSOC)->fetchall()[0];
-            if($searchTable['exists'] != 0){
+            if($searchTable['exist'] != 0){
                 $this->TableExists = 1;
             }
         }
@@ -43,6 +44,19 @@ class TableCreate
             }
         }
     }
+
+    public function varchar($name,$count=255){
+        if($this->errors == 0){
+            if($this->TableExists  == 0){
+                $this->columns .= "{$name} varchar($count)";
+            }
+        }
+    }
+
+
+
+
+
     //new index for column
 
     /**

@@ -4,7 +4,10 @@ require_once("vendor/autoload.php");
 
 use database\db;
 use database\table;
+use database\TableCreate;
+use database\TableOperations;
 use database\Exception\tableException;
+use PDO;
 
 
 
@@ -30,8 +33,9 @@ class DataBase
      * @param $tableName
      * @return table
      */
-    public function newTable($tableName){
-        $this->tables[$tableName] = new table($this->db->getDb(),$tableName,$this->dbName);
+    public function addTable($tableName){
+
+        $this->tables[$tableName] = new TableOperations($this->db->getDb(),$tableName,$this->dbName);
         return $this->tables[$tableName];
     }
 
@@ -55,7 +59,7 @@ class DataBase
      * @param $tableName
      * @return table
      */
-    protected function getTable($tableName): table
+    public function table($tableName): TableOperations
     {
         if(array_key_exists($tableName,$this->tables)){
             return $this->tables[$tableName];
@@ -67,16 +71,17 @@ class DataBase
      * @param array|string|null $arguments
      * @return table|array
      */
-    public function __call(string $name, array $arguments = null) :table|array
+    public function __call(string $name, array $arguments = null) :TableOperations|array
     {
         if(array_key_exists($name,$this->tables) && $arguments == null){
-            return $this->getTable($name);
+            return $this->tables[$name];
         }elseif(array_key_exists($name,$this->tables) && $arguments != null){
             if(count($arguments) == 1){
-                return $this->getTable($name)->query($arguments[0]);
-            }else{
-                return $this->getTable($name)->select(...$arguments);
+                return $this->tables[$name]->query($arguments[0]);
             }
+//            else{
+//                return $this->getTable($name)->select(...$arguments);
+//            }
 
         }
     }
@@ -93,9 +98,17 @@ $laravel = new DataBase();
 
 //new \PDO("pgsql:host=127.0.0.1;port=5432;dbname=postgres","postgres","newPassword");
 $laravel->connect("postgres12",'postgres','newPassword',['dbms'=>"pgsql","port"=>"5432"]);
-$laravel->newTable("base");
-$laravel->base()->column("base int");
+$laravel->addTable("base");
+$laravel->base()->column("base int DEFAULT 10");
 $laravel->base()->create();
+//$laravel->base()->insert(["base"],[22]);
+print_r($laravel->base("SELECT * FROM base"));
+
+$laravelM = new DataBase();
+$laravelM->connect("laravel",'root','root1234',['dbms'=>"mysql","port"=>"3306"]);
+$laravelM->addTable("base");
+//$laravelM->base()->column("base int");
+//$laravelM->base()->create();
 //$laravel->newTable("users2");
 //$laravel->newTable("users");
 //$laravel->newTable("someBase");

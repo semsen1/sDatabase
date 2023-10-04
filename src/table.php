@@ -1,12 +1,26 @@
 <?php
 
 namespace database;
+
 use database\Exception\tableException;
-use database\TableCreate;
 use PDO;
-class table extends TableCreate
+
+class table
 {
+    protected PDO $db;
+    protected string $name;
+    protected string $dbName;
+    protected $errors = 0;
+
+    public function __construct(PDO $db, string $name, string $dbName = '')
+    {
+        $this->db = $db;
+        $this->name = $name;
+        $this->dbName = $dbName;
+    }
+
     //select from table
+
     /**
      * @param string $columns
      * @param int $fetch
@@ -16,31 +30,31 @@ class table extends TableCreate
      * @param string|false $having
      * @return mixed|void
      */
-    public function select(string $columns, int $fetch = 0, string|false $where= false, string|false $order=false, string|false $group=false, string|false $having=false)
+    public function select(string $columns, int $fetch = 0, string|false $where = false, string|false $order = false, string|false $group = false, string|false $having = false)
     {
-        if($this->errors == 0){
+        if ($this->errors == 0) {
             //if isset query
-            if(!empty($where)){
+            if (!empty($where)) {
                 $where = "WHERE $where";
             }
-            if(!empty($order)){
+            if (!empty($order)) {
                 $order = "ORDER BY $order";
             }
-            if(!empty($group)){
+            if (!empty($group)) {
                 $group = "GROUP BY $group";
             }
-            if(!empty($having)){
+            if (!empty($having)) {
                 $having .= " HAVING $having";
             }
-            $terms = $where." ".$order." ".$group." ".$having;
-            if($fetch != 0){
-                $data = $this->db->query("SELECT {$columns} FROM {$this->name} {$terms}",PDO::FETCH_ASSOC)->fetchall();
-            }elseif($fetch == 0){
+            $terms = $where . " " . $order . " " . $group . " " . $having;
+            if ($fetch != 0) {
+                $data = $this->db->query("SELECT {$columns} FROM {$this->name} {$terms}", PDO::FETCH_ASSOC)->fetchall();
+            } elseif ($fetch == 0) {
                 $data = $this->db->query("SELECT {$columns} FROM {$this->name} {$terms}")->fetchall();
             }
             //if fetch is double-digit fetch row = the second digit of the number
-            if($fetch > 1){
-                $pos = substr($fetch,1);
+            if ($fetch > 1) {
+                $pos = substr($fetch, 1);
                 $data = $data[$pos];
             }
             return $data;
@@ -55,8 +69,9 @@ class table extends TableCreate
      * @param $where
      * @return void
      */
-    public function update($column, $newValue, $where){
-        if($this->errors == 0 && !empty($column) && !empty($newValue) && !empty($where)){
+    public function update($column, $newValue, $where)
+    {
+        if ($this->errors == 0 && !empty($column) && !empty($newValue) && !empty($where)) {
             $this->db->exec("UPDATE {$this->name} SET `{$column}` = '{$newValue}' WHERE {$where}");
         }
     }
@@ -66,47 +81,60 @@ class table extends TableCreate
      * @param $where
      * @return void
      */
-    public function delete($where){
-        if($this->errors == 0){
-            if(isset($where) && !empty($where)){
+    public function delete(string|array|null $where = null):void
+    {
+        if ($this->errors == 0) {
+            if (isset($where) && !empty($where)) {
                 $this->db->exec("DELETE FROM {$this->name} WHERE {$where}");
             }
         }
-
     }
-    //delete from table columns as string values as array
 
     /**
      * @param string $columns
      * @param ...$values
      * @return void
      */
-    public function insert(string $columns, ...$values){
-        if($this->errors == 0){
+    public function insert(string|array|null $columns = null, string|array|null $values = null)
+    {
+        if ($this->errors == 0) {
             $error = 0;
-            if(!empty($columns)){
-                $columns = "($columns)";
-                //if columns length != values length error
-                if(count(explode(',',$columns)) != count($values)){
-                    $error = $error +1;
-                }
+
+            if ($columns == null && $values == null) {
+                $this->db->exec("INSERT INTO {$this->name} default values");
             }
 
+            if ($columns != null && $values != null) {
+                if (is_string($columns)) {
+                    $columns = explode(",", $columns);
+                }
+                if (is_string($values)) {
+                    $values = explode(",", $values);
+                }
+                if (count($columns) == count($values)) {
+                    $val = '';
+                    for ($i = 0; $i < count($values); $i++) {
+                        if($i != (count($values)-1)){
+                            $val .= ":value" . $i . ",";
+                        }else{
+                            $val .= ":value" . $i;
+                        }
 
-            if($error == 0){
-                //for prepare bind
-                $val = '';
-                for($i = 0;$i < count($values);$i++){
-                    $val .= ":v".$i.",";
+                    }
+                    $columns = implode(",",$columns);
+
+                    $Insert = $this->db->prepare("INSERT INTO {$this->name}($columns) VALUES({$val})");
+                    //bind vN with valueN
+                    for ($i2 = 0; $i2 < count($values); $i2++) {
+                        $Insert->bindValue(":value" . $i2, $values[$i2]);
+                    }
+                    $Insert->execute();
+
+                } else {
+                    throw new tableException("Number of values doesn't match number of columns");
                 }
-                //drop last comma
-                $val = preg_replace("/,$/","",$val);
-                $userAdd = $this->db->prepare("INSERT INTO {$this->name} $columns VALUES({$val})");
-                //bind vN with valueN
-                for($i2 = 0;$i2 < count($values);$i2++){
-                    $userAdd->bindValue(":v".$i2,$values[$i2]);
-                }
-                $userAdd->execute();
+            } else {
+                throw new tableException("Two arguments required:columns,values");
             }
         }
     }
@@ -116,18 +144,19 @@ class table extends TableCreate
      * @return array|false|void
      * @throws tableException
      */
-    public function query(array|string $query){
-        if(is_array($query)){
-            if(count($query) != 3){
+    public function query(array|string $query)
+    {
+        if (is_array($query)) {
+            if (count($query) != 3) {
                 throw new tableException("Three arguments are required[query,mode,fetch method]");
-            }else{
-                if(is_string($query[0]) && is_integer($query[1]) && is_string($query[2])){
+            } else {
+                if (is_string($query[0]) && is_integer($query[1]) && is_string($query[2])) {
                     $fetch = $query[2];
-                    return($this->db->query($query[0])->$fetch($query[1]));
+                    return ($this->db->query($query[0])->$fetch($query[1]));
                 }
             }
-        }elseif(is_string($query)){
-            return($this->db->query($query,PDO::FETCH_ASSOC)->fetchAll());
+        } elseif (is_string($query)) {
+            return ($this->db->query($query, PDO::FETCH_ASSOC)->fetchAll());
         }
     }
 }
