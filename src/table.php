@@ -10,7 +10,6 @@ class table
     protected PDO $db;
     protected string $name;
     protected string $dbName;
-    protected $errors = 0;
 
     public function __construct(PDO $db, string $name, string $dbName = '')
     {
@@ -32,33 +31,32 @@ class table
      */
     public function select(string $columns, int $fetch = 0, string|false $where = false, string|false $order = false, string|false $group = false, string|false $having = false)
     {
-        if ($this->errors == 0) {
-            //if isset query
-            if (!empty($where)) {
-                $where = "WHERE $where";
-            }
-            if (!empty($order)) {
-                $order = "ORDER BY $order";
-            }
-            if (!empty($group)) {
-                $group = "GROUP BY $group";
-            }
-            if (!empty($having)) {
-                $having .= " HAVING $having";
-            }
-            $terms = $where . " " . $order . " " . $group . " " . $having;
-            if ($fetch != 0) {
-                $data = $this->db->query("SELECT {$columns} FROM {$this->name} {$terms}", PDO::FETCH_ASSOC)->fetchall();
-            } elseif ($fetch == 0) {
-                $data = $this->db->query("SELECT {$columns} FROM {$this->name} {$terms}")->fetchall();
-            }
-            //if fetch is double-digit fetch row = the second digit of the number
-            if ($fetch > 1) {
-                $pos = substr($fetch, 1);
-                $data = $data[$pos];
-            }
-            return $data;
+        //if isset query
+        if (!empty($where)) {
+            $where = "WHERE $where";
         }
+        if (!empty($order)) {
+            $order = "ORDER BY $order";
+        }
+        if (!empty($group)) {
+            $group = "GROUP BY $group";
+        }
+        if (!empty($having)) {
+            $having .= " HAVING $having";
+        }
+        $terms = $where . " " . $order . " " . $group . " " . $having;
+        if ($fetch != 0) {
+            $data = $this->db->query("SELECT {$columns} FROM {$this->name} {$terms}", PDO::FETCH_ASSOC)->fetchall();
+        } elseif ($fetch == 0) {
+            $data = $this->db->query("SELECT {$columns} FROM {$this->name} {$terms}")->fetchall();
+        }
+        //if fetch is double-digit fetch row = the second digit of the number
+        if ($fetch > 1) {
+            $pos = substr($fetch, 1);
+            $data = $data[$pos];
+        }
+        return $data;
+
     }
 
     //update from table
@@ -71,7 +69,7 @@ class table
      */
     public function update($column, $newValue, $where)
     {
-        if ($this->errors == 0 && !empty($column) && !empty($newValue) && !empty($where)) {
+        if (!empty($column) && !empty($newValue) && !empty($where)) {
             $this->db->exec("UPDATE {$this->name} SET `{$column}` = '{$newValue}' WHERE {$where}");
         }
     }
@@ -81,14 +79,23 @@ class table
      * @param $where
      * @return void
      */
-    public function delete(string|array|null $where = null):void
+    public function delete(string|array|null $where = null): void
     {
-        if ($this->errors == 0) {
-            if (isset($where) && !empty($where)) {
+
+        if (isset($where) && !empty($where)) {
+            if (is_string($where)) {
+                $this->db->exec("DELETE FROM {$this->name} WHERE {$where}");
+            } elseif (is_array($where)) {
+                $where = http_build_query($where, ' AND ', '');
                 $this->db->exec("DELETE FROM {$this->name} WHERE {$where}");
             }
+
+        } else {
+            $this->db->exec("DELETE FROM {$this->name}");
         }
+
     }
+
 
     /**
      * @param string $columns
@@ -97,46 +104,63 @@ class table
      */
     public function insert(string|array|null $columns = null, string|array|null $values = null)
     {
-        if ($this->errors == 0) {
-            $error = 0;
+        $assoc = 0;
 
-            if ($columns == null && $values == null) {
-                $this->db->exec("INSERT INTO {$this->name} default values");
+        if ($columns == null && $values == null) {
+            $this->db->exec("INSERT INTO {$this->name} default values");
+        }
+
+        if ($columns != null && $values == null) {
+            foreach ($columns as $key => $val) {
+                if (is_string($key)) {
+                    $assoc = 1;
+                    break;
+                }
             }
 
-            if ($columns != null && $values != null) {
-                if (is_string($columns)) {
-                    $columns = explode(",", $columns);
+            if ($assoc == 1) {
+                $preVal = $columns;
+                $columns = array();
+                foreach ($preVal as $column => $value) {
+                    $columns[] = $column;
+                    $values[] = $value;
                 }
-                if (is_string($values)) {
-                    $values = explode(",", $values);
-                }
-                if (count($columns) == count($values)) {
-                    $val = '';
-                    for ($i = 0; $i < count($values); $i++) {
-                        if($i != (count($values)-1)){
-                            $val .= ":value" . $i . ",";
-                        }else{
-                            $val .= ":value" . $i;
-                        }
-
-                    }
-                    $columns = implode(",",$columns);
-
-                    $Insert = $this->db->prepare("INSERT INTO {$this->name}($columns) VALUES({$val})");
-                    //bind vN with valueN
-                    for ($i2 = 0; $i2 < count($values); $i2++) {
-                        $Insert->bindValue(":value" . $i2, $values[$i2]);
-                    }
-                    $Insert->execute();
-
-                } else {
-                    throw new tableException("Number of values doesn't match number of columns");
-                }
-            } else {
-                throw new tableException("Two arguments required:columns,values");
             }
         }
+
+        if ($columns != null && $values != null) {
+            if (is_string($columns)) {
+                $columns = explode(",", $columns);
+            }
+            if (is_string($values)) {
+                $values = explode(",", $values);
+            }
+            if (count($columns) == count($values)) {
+                $val = '';
+                for ($i = 0; $i < count($values); $i++) {
+                    if ($i != (count($values) - 1)) {
+                        $val .= ":value" . $i . ",";
+                    } else {
+                        $val .= ":value" . $i;
+                    }
+
+                }
+                $columns = implode(",", $columns);
+
+                $Insert = $this->db->prepare("INSERT INTO {$this->name}($columns) VALUES({$val})");
+                //bind vN with valueN
+                for ($i2 = 0; $i2 < count($values); $i2++) {
+                    $Insert->bindValue(":value" . $i2, $values[$i2]);
+                }
+                $Insert->execute();
+
+            } else {
+                throw new tableException("Number of values doesn't match number of columns");
+            }
+        } else {
+            throw new tableException("Two arguments required:columns,values");
+        }
+
     }
 
     /**

@@ -1,7 +1,7 @@
 <?php
 namespace database;
 require_once("vendor/autoload.php");
-
+error_reporting(E_ALL);
 use database\db;
 use database\table;
 use database\TableCreate;
@@ -101,7 +101,8 @@ $laravel->connect("postgres12",'postgres','newPassword',['dbms'=>"pgsql","port"=
 $laravel->addTable("base");
 $laravel->base()->column("base int DEFAULT 10");
 $laravel->base()->create();
-//$laravel->base()->insert(["base"],[22]);
+$laravel->base()->insert(["base"=>122]);
+//$laravel->base()->delete(["base"=>"asf","123"=>"2144"]);
 print_r($laravel->base("SELECT * FROM base"));
 
 $laravelM = new DataBase();
