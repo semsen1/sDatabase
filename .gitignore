@@ -2,3 +2,7 @@
 codeception.yml
 /tests/
 /vendor/
+.idea
+codeception.yml
+/tests/
+/vendor/

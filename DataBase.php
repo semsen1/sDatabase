@@ -1,16 +1,20 @@
 <?php
 namespace database;
 require_once("vendor/autoload.php");
-
+error_reporting(E_ALL);
 use database\db;
 use database\table;
+use database\TableCreate;
+use database\TableOperations;
 use database\Exception\tableException;
+use PDO;
 
 
 
 class DataBase
 {
     private db $db;
+    private $dbName;
     private array $tables;
     /**
      * @param string $dbName
@@ -19,17 +23,20 @@ class DataBase
      * @param array|null $params params[host = 127.0.0.1|dbms = mysql|port = 3306]
      * @return void
      */
-    public function connect(string $dbName, string $login, string $password,Array|null $params = null): void
+    public function connect(string $dbName, string $login, string $password = '',Array|null $params = null): void
     {
+        $this->dbName = $dbName;
         $this->db = new db($dbName,$login,$password,$params);
     }
 
     /**
      * @param $tableName
-     * @return void
+     * @return table
      */
-    public function newTable($tableName){
-        $this->tables[$tableName] = new table($this->db->getDb(),$tableName);
+    public function addTable($tableName){
+
+        $this->tables[$tableName] = new TableOperations($this->db->getDb(),$tableName,$this->dbName);
+        return $this->tables[$tableName];
     }
 
     /**
@@ -52,7 +59,7 @@ class DataBase
      * @param $tableName
      * @return table
      */
-    protected function getTable($tableName): table
+    public function table($tableName): TableOperations
     {
         if(array_key_exists($tableName,$this->tables)){
             return $this->tables[$tableName];
@@ -61,19 +68,20 @@ class DataBase
 
     /**
      * @param string $name
-     * @param array|string|null $arguments
-     * @return table|array
+     * @param array|null $arguments
+     * @return TableOperations|array
      */
-    public function __call(string $name, array $arguments = null) :table|array
+    public function __call(string $name, array $arguments = null) :TableOperations|array
     {
         if(array_key_exists($name,$this->tables) && $arguments == null){
-            return $this->getTable($name);
+            return $this->tables[$name];
         }elseif(array_key_exists($name,$this->tables) && $arguments != null){
             if(count($arguments) == 1){
-                return $this->getTable($name)->query($arguments[0]);
-            }else{
-                return $this->getTable($name)->select(...$arguments);
+                return $this->tables[$name]->query($arguments[0]);
             }
+//            else{
+//                return $this->getTable($name)->select(...$arguments);
+//            }
 
         }
     }
@@ -86,30 +94,32 @@ class DataBase
 }
 
 $laravel = new DataBase();
-$laravel->connect("laravel",'root','');
-$laravel->newTable("users2");
-$laravel->newTable("users");
-$laravel->newTable("someBase");
 
-print_r($laravel->users("*",10,"id % 2 = 0"));
 
-$laravel->someBase()->columns("id_p smallint unsigned auto_increment PRIMARY KEY");
-$laravel->someBase()->columns("path varchar(60) not null");
-$laravel->someBase()->columns("owner_id smallint unsigned not null");
-$laravel->someBase()->columns("team_id smallint unsigned not null");
-$laravel->someBase()->columns("author smallint unsigned");
-$laravel->someBase()->columns("name varchar(255) not null");
-$laravel->someBase()->columns("last_update datetime not null");
-$laravel->someBase()->columns("tags text");
-$laravel->someBase()->columns("status int(1) not null");
-$laravel->someBase()->keys("id_p");
-$laravel->someBase()->keys("owner_id");
-$laravel->someBase()->keys("team_id");
-$laravel->someBase()->fkeys("team_id","asfg","tmi",["c"=>"casc","d"=>"CASCADE","u"=>"CASCADE"]);
-$laravel->someBase()->create();
-print "\r\n";
+//new \PDO("pgsql:host=127.0.0.1;port=5432;dbname=postgres","postgres","newPassword");
+$laravel->connect("postgres12",'postgres','newPassword',['dbms'=>"pgsql","port"=>"5432"]);
+$laravel->addTable("base");
+$laravel->base()->column("base int DEFAULT 10");
+$laravel->base()->create();
+$laravel->base()->insert(["base"=>122]);
+//$laravel->base()->delete(["base"=>122]);
+print_r($laravel->base("SELECT * FROM base"));
 
-print_r($laravel->users()->select("COUNT(*) as count",10)['count']);
+$laravelM = new DataBase();
+$laravelM->connect("laravel",'root','root1234',['dbms'=>"mysql","port"=>"3306"]);
+$laravelM->addTable("base");
+//$laravelM->base()->column("base int");
+//$laravelM->base()->create();
+//$laravel->newTable("users2");
+//$laravel->newTable("users");
+//$laravel->newTable("someBase");
+//
+//print_r($laravel->users("*",10,"id % 2 = 0"));
+//
+
+//print "\r\n";
+//
+//print_r($laravel->users()->select("COUNT(*) as count",10)['count']);
 
 
 ?>

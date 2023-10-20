@@ -1,6 +1,9 @@
 {
     "name": "sem/sdatabase",
     "type": "project",
+    "name": "sdatabase/sdatabase",
+    "type": "library",
+    "version": "1.9.0",
     "require-dev": {},
     "license": "MIT",
     "autoload": {
