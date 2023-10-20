@@ -140,7 +140,9 @@ class table
             }
             if (count($columns) == count($values)) {
                 $val = '';
+                $res = array();
                 for ($i = 0; $i < count($values); $i++) {
+                    $res[":value{$i}"] = $value;
                     if ($i != (count($values) - 1)) {
                         $val .= ":value" . $i . ",";
                     } else {
@@ -149,7 +151,7 @@ class table
 
                 }
                 $columns = implode(",", $columns);
-                $this->db->prepare("INSERT INTO {$this->name}($columns) VALUES({$val})")->execute($values);
+                $this->db->prepare("INSERT INTO {$this->name}($columns) VALUES({$val})")->execute($res);
             } else {
                 throw new tableException("Number of values doesn't match number of columns");
             }

@@ -97,17 +97,18 @@ $laravel = new DataBase();
 
 
 //new \PDO("pgsql:host=127.0.0.1;port=5432;dbname=postgres","postgres","newPassword");
-$laravel->connect("postgres12",'postgres','newPassword',['dbms'=>"pgsql","port"=>"5432"]);
+//$laravel->connect("postgres12",'postgres','newPassword',['dbms'=>"pgsql","port"=>"5432"]);
+$laravel->connect("postgres12",'root','');
 $laravel->addTable("base");
 $laravel->base()->column("base int DEFAULT 10");
 $laravel->base()->create();
-$laravel->base()->insert(["base"=>122]);
-//$laravel->base()->delete(["base"=>122]);
+$laravel->base()->insert(["base"=>432562]);
+$laravel->base()->delete(["base"=>122]);
 print_r($laravel->base("SELECT * FROM base"));
 
-$laravelM = new DataBase();
-$laravelM->connect("laravel",'root','root1234',['dbms'=>"mysql","port"=>"3306"]);
-$laravelM->addTable("base");
+//$laravelM = new DataBase();
+//$laravelM->connect("laravel",'root','root1234',['dbms'=>"mysql","port"=>"3306"]);
+//$laravelM->addTable("base");
 //$laravelM->base()->column("base int");
 //$laravelM->base()->create();
 //$laravel->newTable("users2");

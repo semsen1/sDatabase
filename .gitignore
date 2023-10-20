@@ -1,8 +1,5 @@
 .idea
 codeception.yml
-/tests/
-/vendor/
-.idea
-codeception.yml
-/tests/
-/vendor/
+composer.phar
+composer.lock
+vendor
