@@ -68,8 +68,8 @@ class DataBase
 
     /**
      * @param string $name
-     * @param array|string|null $arguments
-     * @return table|array
+     * @param array|null $arguments
+     * @return TableOperations|array
      */
     public function __call(string $name, array $arguments = null) :TableOperations|array
     {
@@ -102,7 +102,7 @@ $laravel->addTable("base");
 $laravel->base()->column("base int DEFAULT 10");
 $laravel->base()->create();
 $laravel->base()->insert(["base"=>122]);
-//$laravel->base()->delete(["base"=>"asf","123"=>"2144"]);
+//$laravel->base()->delete(["base"=>122]);
 print_r($laravel->base("SELECT * FROM base"));
 
 $laravelM = new DataBase();

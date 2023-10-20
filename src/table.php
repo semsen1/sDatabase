@@ -62,12 +62,12 @@ class table
     //update from table
 
     /**
-     * @param $column
-     * @param $newValue
-     * @param $where
+     * @param string|array $column
+     * @param string|array|null $newValue
+     * @param string|array|null $where
      * @return void
      */
-    public function update($column, $newValue, $where)
+    public function update(string|array $column, string|array|null $newValue = null, string|array|null $where = null)
     {
         if (!empty($column) && !empty($newValue) && !empty($where)) {
             $this->db->exec("UPDATE {$this->name} SET `{$column}` = '{$newValue}' WHERE {$where}");
@@ -76,20 +76,23 @@ class table
     //delete from table
 
     /**
-     * @param $where
+     * @param array|null $where
      * @return void
      */
-    public function delete(string|array|null $where = null): void
+    public function delete(array|null $where = null): void
     {
-
-        if (isset($where) && !empty($where)) {
-            if (is_string($where)) {
-                $this->db->exec("DELETE FROM {$this->name} WHERE {$where}");
-            } elseif (is_array($where)) {
-                $where = http_build_query($where, ' AND ', '');
-                $this->db->exec("DELETE FROM {$this->name} WHERE {$where}");
+        if (!empty($where)) {
+            $query = "DELETE from {$this->name} WHERE ";
+            $values = array();
+            foreach ($where as $key => $value) {
+                if($value == "AND" || $value == "OR"){
+                    $query .= " {$value} ";
+                }else{
+                    $query .= $key."=?";
+                    $values[] = $value;
+                }
             }
-
+            $this->db->prepare($query)->execute($values);
         } else {
             $this->db->exec("DELETE FROM {$this->name}");
         }
@@ -146,14 +149,7 @@ class table
 
                 }
                 $columns = implode(",", $columns);
-
-                $Insert = $this->db->prepare("INSERT INTO {$this->name}($columns) VALUES({$val})");
-                //bind vN with valueN
-                for ($i2 = 0; $i2 < count($values); $i2++) {
-                    $Insert->bindValue(":value" . $i2, $values[$i2]);
-                }
-                $Insert->execute();
-
+                $this->db->prepare("INSERT INTO {$this->name}($columns) VALUES({$val})")->execute($values);
             } else {
                 throw new tableException("Number of values doesn't match number of columns");
             }
